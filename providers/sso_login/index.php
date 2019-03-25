@@ -1,6 +1,6 @@
 <?php
 	// SSO Generic Login Provider
-	// (C) 2015 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	if (!defined("SSO_FILE"))  exit();
 
