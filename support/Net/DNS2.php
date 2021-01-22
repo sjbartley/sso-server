@@ -128,14 +128,9 @@ class Net_DNS2
 
 	static public function autoload($name)
 	{
-		//
-
-		//
 		if (strncmp($name, 'Net_DNS2', 8) == 0) {
-
 			include str_replace('_', '/', $name) . '.php';
 		}
-
 		return;
 	}
 
@@ -4718,6 +4713,73 @@ class Net_DNS2_RR_ATMA extends Net_DNS2_RR
 
 ?><?php
 
+class Net_DNS2_RR_TXT extends Net_DNS2_RR
+{
+
+	public $text = array();
+
+	protected function rrToString()
+	{
+		if (count($this->text) == 0) {
+			return '""';
+		}
+
+		$data = '';
+
+		foreach ($this->text as $t) {
+
+			$data .= $this->formatString($t) . ' ';
+		}
+
+		return trim($data);
+	}
+
+	protected function rrFromString(array $rdata)
+	{
+		$data = $this->buildString($rdata);
+		if (count($data) > 0) {
+
+			$this->text = $data;
+		}
+
+		return true;
+	}
+
+	protected function rrSet(Net_DNS2_Packet &$packet)
+	{
+		if ($this->rdlength > 0) {
+
+			$length = $packet->offset + $this->rdlength;
+			$offset = $packet->offset;
+
+			while ($length > $offset) {
+
+				$this->text[] = Net_DNS2_Packet::label($packet, $offset);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected function rrGet(Net_DNS2_Packet &$packet)
+	{
+		$data = null;
+
+		foreach ($this->text as $t) {
+
+			$data .= chr(strlen($t)) . $t;
+		}
+
+		$packet->offset += strlen($data);
+
+		return $data;
+	}
+}
+
+?><?php
+
 class Net_DNS2_RR_AVC extends Net_DNS2_RR_TXT
 {
 }
@@ -4790,8 +4852,166 @@ class Net_DNS2_RR_CAA extends Net_DNS2_RR
 
 ?><?php
 
+
+class Net_DNS2_RR_DNSKEY extends Net_DNS2_RR
+{
+
+	public $flags;
+
+	public $protocol;
+
+	public $algorithm;
+
+	public $key;
+
+	protected function rrToString()
+	{
+		return $this->flags . ' ' . $this->protocol . ' ' .
+			$this->algorithm . ' ' . $this->key;
+	}
+
+	protected function rrFromString(array $rdata)
+	{
+		$this->flags        = array_shift($rdata);
+		$this->protocol     = array_shift($rdata);
+		$this->algorithm    = array_shift($rdata);
+		$this->key          = implode(' ', $rdata);
+
+		return true;
+	}
+
+	protected function rrSet(Net_DNS2_Packet &$packet)
+	{
+		if ($this->rdlength > 0) {
+
+			//
+
+			//
+			$x = unpack('nflags/Cprotocol/Calgorithm', $this->rdata);
+
+			//
+
+			//
+
+			//
+			$this->flags        = $x['flags'];
+			$this->protocol     = $x['protocol'];
+			$this->algorithm    = $x['algorithm'];
+
+			$this->key          = base64_encode(substr($this->rdata, 4));
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected function rrGet(Net_DNS2_Packet &$packet)
+	{
+		if (strlen($this->key) > 0) {
+
+			$data = pack('nCC', $this->flags, $this->protocol, $this->algorithm);
+			$data .= base64_decode($this->key);
+
+			$packet->offset += strlen($data);
+
+			return $data;
+		}
+
+		return null;
+	}
+}
+
+?><?php
+
 class Net_DNS2_RR_CDNSKEY extends Net_DNS2_RR_DNSKEY
 {
+}
+
+?><?php
+
+
+class Net_DNS2_RR_DS extends Net_DNS2_RR
+{
+
+	public $keytag;
+
+	public $algorithm;
+
+	public $digesttype;
+
+	public $digest;
+
+	protected function rrToString()
+	{
+		return $this->keytag . ' ' . $this->algorithm . ' ' .
+			$this->digesttype . ' ' . $this->digest;
+	}
+
+	protected function rrFromString(array $rdata)
+	{
+		$this->keytag       = array_shift($rdata);
+		$this->algorithm    = array_shift($rdata);
+		$this->digesttype   = array_shift($rdata);
+		$this->digest       = implode('', $rdata);
+
+		return true;
+	}
+
+	protected function rrSet(Net_DNS2_Packet &$packet)
+	{
+		if ($this->rdlength > 0) {
+
+			//
+
+			//
+			$x = unpack('nkeytag/Calgorithm/Cdigesttype', $this->rdata);
+
+			$this->keytag       = $x['keytag'];
+			$this->algorithm    = $x['algorithm'];
+			$this->digesttype   = $x['digesttype'];
+
+			//
+
+			//
+			$digest_size = 0;
+			if ($this->digesttype == 1) {
+
+				$digest_size = 20;
+
+			} else if ($this->digesttype == 2) {
+
+				$digest_size = 32;
+			}
+
+			//
+
+			//
+			$x = unpack('H*', substr($this->rdata, 4, $digest_size));
+			$this->digest = $x[1];
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected function rrGet(Net_DNS2_Packet &$packet)
+	{
+		if (strlen($this->digest) > 0) {
+
+			$data = pack(
+				'nCCH*',
+				$this->keytag, $this->algorithm, $this->digesttype, $this->digest
+			);
+
+			$packet->offset += strlen($data);
+
+			return $data;
+		}
+
+		return null;
+	}
 }
 
 ?><?php
@@ -5204,162 +5424,6 @@ class Net_DNS2_RR_DNAME extends Net_DNS2_RR
 		if (strlen($this->dname) > 0) {
 
 			return $packet->compress($this->dname, $packet->offset);
-		}
-
-		return null;
-	}
-}
-
-?><?php
-
-class Net_DNS2_RR_DNSKEY extends Net_DNS2_RR
-{
-
-	public $flags;
-
-	public $protocol;
-
-	public $algorithm;
-
-	public $key;
-
-	protected function rrToString()
-	{
-		return $this->flags . ' ' . $this->protocol . ' ' .
-			$this->algorithm . ' ' . $this->key;
-	}
-
-	protected function rrFromString(array $rdata)
-	{
-		$this->flags        = array_shift($rdata);
-		$this->protocol     = array_shift($rdata);
-		$this->algorithm    = array_shift($rdata);
-		$this->key          = implode(' ', $rdata);
-
-		return true;
-	}
-
-	protected function rrSet(Net_DNS2_Packet &$packet)
-	{
-		if ($this->rdlength > 0) {
-
-			//
-
-			//
-			$x = unpack('nflags/Cprotocol/Calgorithm', $this->rdata);
-
-			//
-
-			//
-
-			//
-			$this->flags        = $x['flags'];
-			$this->protocol     = $x['protocol'];
-			$this->algorithm    = $x['algorithm'];
-
-			$this->key          = base64_encode(substr($this->rdata, 4));
-
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function rrGet(Net_DNS2_Packet &$packet)
-	{
-		if (strlen($this->key) > 0) {
-
-			$data = pack('nCC', $this->flags, $this->protocol, $this->algorithm);
-			$data .= base64_decode($this->key);
-
-			$packet->offset += strlen($data);
-
-			return $data;
-		}
-
-		return null;
-	}
-}
-
-?><?php
-
-class Net_DNS2_RR_DS extends Net_DNS2_RR
-{
-
-	public $keytag;
-
-	public $algorithm;
-
-	public $digesttype;
-
-	public $digest;
-
-	protected function rrToString()
-	{
-		return $this->keytag . ' ' . $this->algorithm . ' ' .
-			$this->digesttype . ' ' . $this->digest;
-	}
-
-	protected function rrFromString(array $rdata)
-	{
-		$this->keytag       = array_shift($rdata);
-		$this->algorithm    = array_shift($rdata);
-		$this->digesttype   = array_shift($rdata);
-		$this->digest       = implode('', $rdata);
-
-		return true;
-	}
-
-	protected function rrSet(Net_DNS2_Packet &$packet)
-	{
-		if ($this->rdlength > 0) {
-
-			//
-
-			//
-			$x = unpack('nkeytag/Calgorithm/Cdigesttype', $this->rdata);
-
-			$this->keytag       = $x['keytag'];
-			$this->algorithm    = $x['algorithm'];
-			$this->digesttype   = $x['digesttype'];
-
-			//
-
-			//
-			$digest_size = 0;
-			if ($this->digesttype == 1) {
-
-				$digest_size = 20;
-
-			} else if ($this->digesttype == 2) {
-
-				$digest_size = 32;
-			}
-
-			//
-
-			//
-			$x = unpack('H*', substr($this->rdata, 4, $digest_size));
-			$this->digest = $x[1];
-
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function rrGet(Net_DNS2_Packet &$packet)
-	{
-		if (strlen($this->digest) > 0) {
-
-			$data = pack(
-				'nCCH*',
-				$this->keytag, $this->algorithm, $this->digesttype, $this->digest
-			);
-
-			$packet->offset += strlen($data);
-
-			return $data;
 		}
 
 		return null;
@@ -8157,6 +8221,76 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
 
 ?><?php
 
+class Net_DNS2_RR_TLSA extends Net_DNS2_RR
+{
+
+	public $cert_usage;
+
+	public $selector;
+
+	public $matching_type;
+
+	public $certificate;
+
+	protected function rrToString()
+	{
+		return $this->cert_usage . ' ' . $this->selector . ' ' .
+			$this->matching_type . ' ' . base64_encode($this->certificate);
+	}
+
+	protected function rrFromString(array $rdata)
+	{
+		$this->cert_usage       = array_shift($rdata);
+		$this->selector         = array_shift($rdata);
+		$this->matching_type    = array_shift($rdata);
+		$this->certificate      = base64_decode(implode('', $rdata));
+
+		return true;
+	}
+
+	protected function rrSet(Net_DNS2_Packet &$packet)
+	{
+		if ($this->rdlength > 0) {
+
+			//
+
+			//
+			$x = unpack('Cusage/Cselector/Ctype', $this->rdata);
+
+			$this->cert_usage       = $x['usage'];
+			$this->selector         = $x['selector'];
+			$this->matching_type    = $x['type'];
+
+			//
+
+			//
+			$this->certificate  = substr($this->rdata, 3, $this->rdlength - 3);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected function rrGet(Net_DNS2_Packet &$packet)
+	{
+		if (strlen($this->certificate) > 0) {
+
+			$data = pack(
+				'CCC', $this->cert_usage, $this->selector, $this->matching_type
+			) . $this->certificate;
+
+			$packet->offset += strlen($data);
+
+			return $data;
+		}
+
+		return null;
+	}
+}
+
+?><?php
+
 class Net_DNS2_RR_SMIMEA extends Net_DNS2_RR_TLSA
 {
 }
@@ -8691,76 +8825,6 @@ class Net_DNS2_RR_TKEY extends Net_DNS2_RR
 
 ?><?php
 
-class Net_DNS2_RR_TLSA extends Net_DNS2_RR
-{
-
-	public $cert_usage;
-
-	public $selector;
-
-	public $matching_type;
-
-	public $certificate;
-
-	protected function rrToString()
-	{
-		return $this->cert_usage . ' ' . $this->selector . ' ' .
-			$this->matching_type . ' ' . base64_encode($this->certificate);
-	}
-
-	protected function rrFromString(array $rdata)
-	{
-		$this->cert_usage       = array_shift($rdata);
-		$this->selector         = array_shift($rdata);
-		$this->matching_type    = array_shift($rdata);
-		$this->certificate      = base64_decode(implode('', $rdata));
-
-		return true;
-	}
-
-	protected function rrSet(Net_DNS2_Packet &$packet)
-	{
-		if ($this->rdlength > 0) {
-
-			//
-
-			//
-			$x = unpack('Cusage/Cselector/Ctype', $this->rdata);
-
-			$this->cert_usage       = $x['usage'];
-			$this->selector         = $x['selector'];
-			$this->matching_type    = $x['type'];
-
-			//
-
-			//
-			$this->certificate  = substr($this->rdata, 3, $this->rdlength - 3);
-
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function rrGet(Net_DNS2_Packet &$packet)
-	{
-		if (strlen($this->certificate) > 0) {
-
-			$data = pack(
-				'CCC', $this->cert_usage, $this->selector, $this->matching_type
-			) . $this->certificate;
-
-			$packet->offset += strlen($data);
-
-			return $data;
-		}
-
-		return null;
-	}
-}
-
-?><?php
-
 class Net_DNS2_RR_TSIG extends Net_DNS2_RR
 {
 
@@ -9083,73 +9147,6 @@ class Net_DNS2_RR_TSIG extends Net_DNS2_RR
 		return $this->_signHMAC(
 			$k_opad . pack('H*', md5($k_ipad . $data)), null, $algorithm
 		);
-	}
-}
-
-?><?php
-
-class Net_DNS2_RR_TXT extends Net_DNS2_RR
-{
-
-	public $text = array();
-
-	protected function rrToString()
-	{
-		if (count($this->text) == 0) {
-			return '""';
-		}
-
-		$data = '';
-
-		foreach ($this->text as $t) {
-
-			$data .= $this->formatString($t) . ' ';
-		}
-
-		return trim($data);
-	}
-
-	protected function rrFromString(array $rdata)
-	{
-		$data = $this->buildString($rdata);
-		if (count($data) > 0) {
-
-			$this->text = $data;
-		}
-
-		return true;
-	}
-
-	protected function rrSet(Net_DNS2_Packet &$packet)
-	{
-		if ($this->rdlength > 0) {
-
-			$length = $packet->offset + $this->rdlength;
-			$offset = $packet->offset;
-
-			while ($length > $offset) {
-
-				$this->text[] = Net_DNS2_Packet::label($packet, $offset);
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function rrGet(Net_DNS2_Packet &$packet)
-	{
-		$data = null;
-
-		foreach ($this->text as $t) {
-
-			$data .= chr(strlen($t)) . $t;
-		}
-
-		$packet->offset += strlen($data);
-
-		return $data;
 	}
 }
 
