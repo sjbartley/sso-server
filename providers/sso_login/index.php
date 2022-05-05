@@ -182,6 +182,9 @@
 
 	class sso_login extends SSO_ProviderBase
 	{
+		/** @var array<string, string> */
+		protected array $activemodules = array();
+
 		public function Init()
 		{
 			global $sso_settings, $g_sso_login_modules;

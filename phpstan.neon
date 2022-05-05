@@ -19,3 +19,12 @@ parameters:
 	excludePaths:
 		- %currentWorkingDirectory%/vendor
 		- %currentWorkingDirectory%/upgrade.php
+
+	ignoreErrors:
+		- '#Function mcrypt_generic not found\.#'
+		- '#Function mcrypt_generic_init not found\.#'
+		- '#Function mcrypt_create_iv not found\.#'
+		- '#Function mdecrypt_generic not found\.#'
+		- '#Function mcrypt_list_algorithms not found\.#'
+		- '#Function mcrypt_module_close not found\.#'
+		- '#Function mcrypt_module_open not found\.#'

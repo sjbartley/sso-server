@@ -307,13 +307,13 @@
 			if ($info["cookiekey"] != "" && $info["cookieiv"] != "" && $info["cookiekey2"] != "" && $info["cookieiv2"] != "")
 			{
 				// Initialize active modules.
-				$this->activemodules = array();
+				$activemodules = array();
 				foreach ($g_sso_login_modules as $key => $info2)
 				{
 					if ($sso_settings["sso_login"]["modules"][$key]["_a"])
 					{
 						$module = "sso_login_module_" . $key;
-						$this->activemodules[$key] = new $module;
+						$activemodules[$key] = new $module;
 					}
 				}
 
@@ -355,7 +355,7 @@
 											{
 												// Go to two-factor authentication page.
 												$methods = array();
-												foreach ($this->activemodules as $key => &$instance)
+												foreach ($activemodules as $key => &$instance)
 												{
 													$name = $instance->GetTwoFactorName(false);
 													if ($name !== false)  $methods[$key] = true;
@@ -376,7 +376,7 @@
 													if (!SSO_SaveSessionInfo())  $messages["errors"][] = BB_Translate("Login exists but a fatal error occurred.  Fatal error:  Unable to save session information.");
 													else
 													{
-														$this->activemodules[$userinfo["two_factor_method"]]->SendTwoFactorCode($messages, $userrow, $userinfo);
+														$activemodules[$userinfo["two_factor_method"]]->SendTwoFactorCode($messages, $userrow, $userinfo);
 
 														if (!count($messages["errors"]))
 														{
@@ -394,7 +394,7 @@
 												if ($sso_settings["sso_login"]["install_type"] == "email_username" || $sso_settings["sso_login"]["install_type"] == "username")  $mapinfo[$sso_settings["sso_login"]["map_username"]] = $userrow->username;
 
 												$origuserinfo = $userinfo;
-												foreach ($this->activemodules as &$instance)
+												foreach ($activemodules as &$instance)
 												{
 													$instance->LoginAddMap($mapinfo, $userrow, $userinfo, false);
 												}
