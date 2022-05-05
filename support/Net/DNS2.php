@@ -3025,7 +3025,7 @@ abstract class Net_DNS2_RR
 
 		if ($this->type == 'OPT') {
 
-			$this->preBuild();
+			//$this->preBuild();
 
 			$data .= pack(
 				'nnN',
@@ -7958,8 +7958,8 @@ class Net_DNS2_Socket
 
 		$this->context = @stream_context_create($opts);
 
-		$errno;
-		$errstr;
+		//$errno;
+		//$errstr;
 
 		switch($this->type) {
 		case Net_DNS2_Socket::SOCK_STREAM:

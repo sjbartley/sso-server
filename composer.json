@@ -19,6 +19,7 @@
         "phpstan/phpstan": "^1.6"
     },
     "scripts": {
-        "phpstan": "phpstan analyse / -c phpstan.neon --no-progress -vvv --memory-limit=4G"
+        "phpstan": "phpstan analyse index.php endpoint.php install.php upgrade.php admin.php cron.php oauth2/index.php providers support -c phpstan.neon --no-progress -vvv --memory-limit=4G",
+        "up": ["Composer\\Config::disableProcessTimeout", "composer update --ignore-platform-reqs"]
     }
 }

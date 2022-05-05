@@ -95,7 +95,7 @@
 	define('QR_FORMAT_TEXT', 0);
 	define('QR_FORMAT_PNG',  1);
 
-	class qrstr {
+	class QRstr {
 		public static function set(&$srctab, $x, $y, $repl, $replLen = false) {
 			$srctab[$y] = substr_replace($srctab[$y], ($replLen !== false)?substr($repl,0,$replLen):$repl, $x, ($replLen !== false)?$replLen:strlen($repl));
 		}
@@ -156,6 +156,7 @@
  */
 
     class QRtools {
+        public static array $frames = [];
 
         //----------------------------------------------------------------------
         public static function binarize($frame)
@@ -1159,7 +1160,7 @@
         {
             try {
 
-                $bs = new QRbitrtream();
+                $bs = new QRbitstream();
 
                 $bs->appendNum(4, 0x8);
                 $bs->appendNum(QRspec::lengthIndicator(QR_MODE_KANJI, $version), (int)($this->size / 2));
@@ -1480,7 +1481,7 @@
         }
 
         //----------------------------------------------------------------------
-        public function estimateBitsModeKanji($size)
+        public static function estimateBitsModeKanji($size)
         {
             return (int)(($size / 2) * 13);
         }
@@ -2123,7 +2124,7 @@
             if($ret < 0)
                 return -1;
 
-            return $run;
+            return $ret;
         }
 
         //----------------------------------------------------------------------
@@ -2937,8 +2938,6 @@
         //----------------------------------------------------------------------
         public function getCode()
         {
-            $ret;
-
             if($this->count < $this->dataLength) {
                 $row = $this->count % $this->blocks;
                 $col = $this->count / $this->blocks;

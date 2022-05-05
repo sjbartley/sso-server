@@ -1494,7 +1494,7 @@
 					$x *= 2;
 				}
 
-				if (strlen($data) > 72)  $data = hash("sha256", $data, true);
+				//Still to implement: if (strlen($data) > 72)  $data = hash("sha256", $data, true);
 
 				$result = @password_hash($data, PASSWORD_BCRYPT, array("cost" => $bits));
 				if ($result === false)  $result = array("success" => false, "error" => "Unable to hash the data.");
@@ -1514,7 +1514,7 @@
 
 			if ($sso_settings["sso_login"]["password_mode"] == "password_hash_bcrypt" && function_exists("password_verify"))
 			{
-				if (strlen($data) > 72)  $data = hash("sha256", $data, true);
+				//Still to implement: if (strlen($data) > 72)  $data = hash("sha256", $data, true);
 
 				$result = @password_verify($data, pack("H*", $hash));
 				if ($result === false)  return false;

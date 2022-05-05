@@ -4,22 +4,6 @@ parameters:
 	bootstrapFiles:
 		- %currentWorkingDirectory%/bootstrap/constants.php
 
-	scanDirectories:
-		- %currentWorkingDirectory%/oauth2
-		- %currentWorkingDirectory%/providers
-		- %currentWorkingDirectory%/support
-
-	scanFiles:
-		- %currentWorkingDirectory%/admin.php
-		- %currentWorkingDirectory%/cron.php
-		- %currentWorkingDirectory%/endpoint.php
-		- %currentWorkingDirectory%/index.php
-
-
-	excludePaths:
-		- %currentWorkingDirectory%/vendor
-		- %currentWorkingDirectory%/upgrade.php
-
 	ignoreErrors:
 		- '#Function mcrypt_generic not found\.#'
 		- '#Function mcrypt_generic_init not found\.#'
