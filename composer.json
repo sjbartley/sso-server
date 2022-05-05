@@ -1,0 +1,24 @@
+{
+    "name": "cubiclesoft/sso-server",
+    "description": "Single Sign On (SSO) Server",
+    "keywords": [
+        "sso",
+        "server"
+    ],
+    "homepage": "https://github.com/cubiclesoft/sso-server",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cubiclesoft"
+        }
+    ],
+    "require": {
+        "php": "^7.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.6"
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse / -c phpstan.neon --no-progress -vvv --memory-limit=4G"
+    }
+}

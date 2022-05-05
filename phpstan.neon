@@ -1,0 +1,21 @@
+parameters:
+	level: 0
+
+	bootstrapFiles:
+		- %currentWorkingDirectory%/bootstrap/constants.php
+
+	scanDirectories:
+		- %currentWorkingDirectory%/oauth2
+		- %currentWorkingDirectory%/providers
+		- %currentWorkingDirectory%/support
+
+	scanFiles:
+		- %currentWorkingDirectory%/admin.php
+		- %currentWorkingDirectory%/cron.php
+		- %currentWorkingDirectory%/endpoint.php
+		- %currentWorkingDirectory%/index.php
+
+
+	excludePaths:
+		- %currentWorkingDirectory%/vendor
+		- %currentWorkingDirectory%/upgrade.php
