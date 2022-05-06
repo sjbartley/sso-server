@@ -2120,11 +2120,13 @@
                 $p += 2;
             }
 
+            $run = $p;
+
             $ret = $this->input->append(QR_MODE_KANJI, $p, str_split($this->dataStr));
             if($ret < 0)
                 return -1;
 
-            return $ret;
+            return $run;
         }
 
         //----------------------------------------------------------------------
